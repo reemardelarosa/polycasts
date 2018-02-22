@@ -12,105 +12,95 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial=scale=1.0, user-scalable=yes">
+  
+  <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../bower_components/web-component-tester/browser.js"></script>
 
-  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-  <script src="../../web-component-tester/browser.js"></script>
-
-  <!-- Step 1: import the element to test -->
   <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 </head>
 
 <body>
-
-  <!-- You can use the document as a place to set up your fixtures. -->
   <test-fixture id="simple-get">
     <template>
       <iron-ajax url="/responds_to_get_with_json"></iron-ajax>
     </template>
   </test-fixture>
-
   <test-fixture id="simple-post">
     <template>
       <iron-ajax method="POST" url="/responds_to_post_with_json"></iron-ajax>
     </template>
   </test-fixture>
 
-  <script>
-    suite('<iron-ajax>', function() {
-      var ajax;
-      var request;
-      var server;
-      var responseHeaders = {
-        json: { 'Content-Type': 'application/json' }
-      };
+</body>
 
-      setup(function() {
+  <script>
+
+    suite('<iron-ajax>', () => {
+      let ajax, request, server,
+        responseHeaders ={
+          json: { 'Content-Type' : 'application/json'}
+        };
+
+      setup(() => {
         server = sinon.fakeServer.create();
         server.respondWith(
           'GET',
           /\/responds_to_get_with_json.*/, [
             200,
             responseHeaders.json,
-            '{"success":true}'
+            '{ "success" : true}'
           ]
         );
 
         server.respondWith(
           'POST',
-          '/responds_to_post_with_json',
-          [
+          '/responds_to_post_with_json', [
             200,
             responseHeaders.json,
-            '{"post_success":true}'
+            '{ "post_success" : true }'
           ]
         );
-
       });
 
-      teardown(function() {
+      teardown(() => {
         server.restore();
       });
 
-      suite('when making simple GET requests for JSON', function() {
-        setup(function() {
+      suite('when making simple GET requests for JSON', () => {
+        setup(() => {
           ajax = fixture('simple-get');
         });
 
-        test('has sane defaults that love you', function() {
+        test('has sane defaults that love you', () => {
           request = ajax.generateRequest();
           server.respond();
           expect(request.response).to.be.ok;
           expect(request.response).to.be.an('object');
           expect(request.response.success).to.be.equal(true);
         });
+
+        suite('when making simple POST requests for JSON', () =>{
+          setup(() => {
+            ajax = fixture('simple-post');
+          });
+
+          test('has the correct xhr method', () => {
+            request = ajax.generateRequest();
+            expect(request.xhr.method).to.be.equal('POST');
+          });
+
+          test('send a real post request', () => {
+            request = ajax.generateRequest();
+            server.respond();
+            expect(request.response).to.be.ok;
+            expect(request.response).to.be.an('object');
+            expect(request.response.post_success).to.be.equal(true);
+          })
+        });
       });
-
-      suite('when making simple POST requests for JSON', function() {
-
-        setup(function() {
-          ajax = fixture('simple-post');
-        });
-
-        test('has the correct xhr method', function() {
-          request = ajax.generateRequest();
-          expect(request.xhr.method).to.be.equal('POST');
-        });
-
-        test('sends a real POST request', function() {
-          request = ajax.generateRequest();
-          server.respond();
-          expect(request.response).to.be.ok;
-          expect(request.response).to.be.an('object');
-          expect(request.response.post_success).to.be.equal(true);
-        });
-
-      });
-
 
     });
   </script>
-
-</body>
 
 </html>
